@@ -1,0 +1,23 @@
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t devenzo/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run devenzo/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t devenzo/multi-client ./client
+  - docker build -t devenzo/multi-nginx ./nginx
+  - docker build -t devenzo/multi-server ./server
+  - docker build -t devenzo/multi-worker ./worker
+
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  - docker push devenzo/multi-client
+  - docker push devenzo/multi-nginx
+  - docker push devenzo/multi-server
+  - docker push devenzo/multi-worker
